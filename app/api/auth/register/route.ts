@@ -33,8 +33,15 @@ export async function POST(req: NextRequest) {
         await createSession(newUser.id)
 
         return NextResponse.json({ success: true }, { status: 201 })
-    } catch (error) {
-        console.error('Registration error:', error)
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    } catch (error: any) {
+        console.error('Registration error detail:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            // Adding more details if available, e.g., request body (if not sensitive)
+            // or specific error type if it's a known error.
+            // For now, the existing stack and code already provide good detail.
+        })
+        return NextResponse.json({ error: `Internal server error: ${error.message}` }, { status: 500 })
     }
 }

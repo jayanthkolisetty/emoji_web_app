@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-    const hasDbUrl = !!process.env.DATABASE_URL
-    const dbUrlPrefix = process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 15) + '...' : 'NONE'
+    const dbUrl = process.env.DATABASE_URL || ''
+    const hasDbUrl = !!dbUrl
+    const protocol = dbUrl.split(':')[0] || 'NONE'
 
     return NextResponse.json({
         envExists: hasDbUrl,
-        prefix: dbUrlPrefix,
+        protocol: protocol,
+        length: dbUrl.length,
         nodeEnv: process.env.NODE_ENV,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        tip: protocol.startsWith('http') ? 'FAIL: You used the https URL instead of the postgresql Connection String!' : 'Protocol check'
     })
 }

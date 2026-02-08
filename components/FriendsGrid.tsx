@@ -30,6 +30,11 @@ export function FriendsGrid({ friends, userFriendCode, onSelect, onFriendAdded }
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [copied, setCopied] = useState(false)
+    const [mounted, setMounted] = React.useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const handleCopyCode = async () => {
         await navigator.clipboard.writeText(userFriendCode)
@@ -198,10 +203,10 @@ export function FriendsGrid({ friends, userFriendCode, onSelect, onFriendAdded }
                             {friend.statusMessage ? (
                                 <>
                                     <p className="text-xs text-indigo-600 font-medium mt-1 truncate w-full">"{friend.statusMessage}"</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">{timeAgo(friend.statusUpdatedAt)}</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">{mounted ? timeAgo(friend.statusUpdatedAt) : '...'}</p>
                                 </>
                             ) : (
-                                <p className="text-xs text-gray-400 mt-1">{timeAgo(friend.statusUpdatedAt)}</p>
+                                <p className="text-xs text-gray-400 mt-1">{mounted ? timeAgo(friend.statusUpdatedAt) : '...'}</p>
                             )}
 
                             <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-400 ring-2 ring-white" />

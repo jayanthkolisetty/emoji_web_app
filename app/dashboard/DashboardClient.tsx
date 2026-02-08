@@ -15,7 +15,13 @@ export default function DashboardClient({ user, friends }: { user: any, friends:
     const [friendList, setFriendList] = useState(friends)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const [selectedFriend, setSelectedFriend] = useState<any>(null)
-    const [lastUpdated, setLastUpdated] = useState(new Date())
+    const [mounted, setMounted] = useState(false)
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+
+    useEffect(() => {
+        setMounted(true)
+        setLastUpdated(new Date())
+    }, [])
 
     // Polling every 5 seconds
     useEffect(() => {
@@ -98,14 +104,14 @@ export default function DashboardClient({ user, friends }: { user: any, friends:
                                         <p className="text-xs text-gray-400">
                                             Vibe: <span className="capitalize text-gray-600">{currentUser.vibeLabel || 'Chill'}</span>
                                             <span className="mx-2">•</span>
-                                            {timeAgo(currentUser.statusUpdatedAt)}
+                                            {mounted ? timeAgo(currentUser.statusUpdatedAt) : '...'}
                                         </p>
                                     </>
                                 ) : (
                                     <p className="text-gray-500">
                                         Current vibe: <span className="font-medium text-gray-900 capitalize">{currentUser.vibeLabel || 'Chill'}</span>
                                         <span className="mx-2">•</span>
-                                        <span className="text-xs text-gray-400">Updated {timeAgo(currentUser.statusUpdatedAt)}</span>
+                                        <span className="text-xs text-gray-400">Updated {mounted ? timeAgo(currentUser.statusUpdatedAt) : '...'}</span>
                                     </p>
                                 )}
                             </div>

@@ -3,16 +3,11 @@ import { cookies } from 'next/headers'
 
 const SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev-only-change-me'
 
-export async function createSession(userId: string) {
+// Create a signed JWT token for a user. The route handler should set the cookie
+// on the outgoing NextResponse (safer and compatible with app route handlers).
+export function createSession(userId: string) {
     const token = jwt.sign({ userId }, SECRET, { expiresIn: '30d' })
-    const cookieStore = await cookies()
-    cookieStore.set('session', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        sameSite: 'lax',
-        path: '/'
-    })
+    return token
 }
 
 export async function getSession() {

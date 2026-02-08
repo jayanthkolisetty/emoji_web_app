@@ -40,10 +40,19 @@ export async function POST(req: NextRequest) {
         console.log('User created successfully, ID:', newUser.id)
 
         console.log('Creating session...')
-        await createSession(newUser.id)
-        console.log('Session created successfully')
+        const token = createSession(newUser.id)
+        console.log('Session token created')
 
-        return NextResponse.json({ success: true }, { status: 201 })
+        const res = NextResponse.json({ success: true }, { status: 201 })
+        res.cookies.set('session', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 60 * 60 * 24 * 30, // 30 days
+            sameSite: 'lax',
+            path: '/',
+        })
+
+        return res
     } catch (error: any) {
         console.error('Registration error detail:', {
             message: error.message,

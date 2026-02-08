@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 export async function POST(req: NextRequest) {
     try {
         const { email, password } = await req.json()
-        console.log('Login attempt for:', email)
+        process.stdout.write(`\n>>> LOGIN ATTEMPT: ${email}\n`)
 
         if (!email || !password) {
             return NextResponse.json({ error: 'Missing email or password' }, { status: 400 })
@@ -27,10 +27,20 @@ export async function POST(req: NextRequest) {
         }
 
         console.log('Creating session...')
-        await createSession(user.id)
-        console.log('Session created successfully')
+        const token = createSession(user.id)
+        console.log('Session token created')
 
-        return NextResponse.json({ success: true, redirect: '/dashboard' })
+        const res = NextResponse.json({ success: true, redirect: '/dashboard' })
+        // set cookie on the response
+        res.cookies.set('session', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 60 * 60 * 24 * 30, // 30 days
+            sameSite: 'lax',
+            path: '/',
+        })
+
+        return res
     } catch (error: any) {
         console.error('Login error detail:', {
             message: error.message,

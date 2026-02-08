@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String
+  friendCode      String   @unique // Short unique code like "A7X9P2"
+  username        String?  @unique
+  displayName     String?
+  vibeEmoji       String?
+  vibeLabel       String?
+  statusMessage   String?  // Custom status message  
+  statusUpdatedAt DateTime @default(now())
+  createdAt       DateTime @default(now())
+  
+  friendsAsA      Friendship[] @relation("UserA")
+  friendsAsB      Friendship[] @relation("UserB")
+}
+
+model Friendship {
+  id        String   @id @default(uuid())
+  userAId   String
+  userBId   String
+  userA     User     @relation("UserA", fields: [userAId], references: [id])
+  userB     User     @relation("UserB", fields: [userBId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userAId, userBId])
+}

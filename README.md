@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EmojiPulse 💓
+
+A real-time emoji status app for close friends. Share how you feel, and get instant suggestions on how to support each other.
+
+![Vibe Check](/public/vibe-check.png)
+
+## Features
+
+- **Auth**: Simple Email/Password sign up.
+- **Profile**: Set your unique username and display name.
+- **Emoji Status**: Search for emojis or describe your vibe to get suggestions.
+- **Friends System**: Generate unique invite links to add friends instantly.
+- **1:1 Assist Panel**: Click a friend to see AI-powered suggestions (messages & actions) based on their mood.
+- **Real-time**: Friend statuses update automatically every 5 seconds.
+
+## Tech Stack
+
+- **Framework**: Next.js 15+ (App Router)
+- **Language**: TypeScript
+- **Database**: SQLite (via Prisma ORM)
+- **Styling**: Tailwind CSS
+- **Auth**: Custom JWT (HttpOnly Cookies)
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Setup Database
+
+Initialize the SQLite database:
+
+```bash
+npx prisma db push
+```
+
+### 3. Run Locally
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How to Test with 2 Users (Localhost)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Open **Chrome** and go to `localhost:3000`.
+   - Sign up as **User A** (e.g., `alice@test.com`).
+   - Set your username (e.g., `alice`).
+   - Click "Add Friend" or "Invite Friends" to copy your invite link.
 
-## Learn More
+2. Open **Incognito Window** (or a different browser like Edge/Firefox).
+   - Paste the invite link.
+   - You will see "Join Alice's Circle".
+   - Click "Create Account" and sign up as **User B** (e.g., `bob@test.com`).
+   - Once signed up, click "Accept Invite".
 
-To learn more about Next.js, take a look at the following resources:
+3. **Verify:**
+   - Both dashboards should now show each other in the friends grid.
+   - Change User A's status to 😢 (Sad).
+   - Watch User B's dashboard update (within 5 seconds).
+   - Click User A on User B's dashboard to see "Negative Vibe" suggestions.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

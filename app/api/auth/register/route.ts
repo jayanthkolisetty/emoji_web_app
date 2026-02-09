@@ -1,53 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 import { createSession } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
+
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+async function supabaseInsertUser(payload: any) {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+        throw new Error('Supabase env vars not configured')
+    }
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/User`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            Prefer: 'return=representation',
+        },
+        body: JSON.stringify(payload),
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+        const msg = data?.message || JSON.stringify(data)
+        throw new Error(`Supabase insert failed: ${msg}`)
+    }
+
+    return data[0]
+}
 
 export async function POST(req: NextRequest) {
     try {
         const { email, password } = await req.json()
-        console.log('Registration attempt for:', email)
 
         if (!email || !password || password.length < 6) {
             return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
         }
 
-        console.log('Checking if user exists...')
-        const existingUser = await prisma.user.findUnique({ where: { email } })
-        console.log('User exists:', !!existingUser)
-        if (existingUser) {
-            return NextResponse.json({ error: 'User already exists' }, { status: 400 })
-        }
-
-        console.log('Hashing password...')
+        // Hash password and prepare user record
         const passwordHash = await bcrypt.hash(password, 10)
-        console.log('Password hashed')
-
-        // Generate unique friend code
-        console.log('Generating friend code...')
         const friendCode = Math.random().toString(36).substring(2, 8).toUpperCase()
-        console.log('Code generated:', friendCode)
+        const displayName = email.split('@')[0]
 
-        console.log('Creating user in DB...')
-        const newUser = await prisma.user.create({
-            data: {
-                email,
-                passwordHash,
-                friendCode,
-                displayName: email.split('@')[0], // Default display name
-            },
+        // Insert using Supabase REST (service role key)
+        const newUser = await supabaseInsertUser({
+            email,
+            passwordHash,
+            friendCode,
+            displayName,
         })
-        console.log('User created successfully, ID:', newUser.id)
 
-        console.log('Creating session...')
+        // Create application session cookie (JWT)
         const token = createSession(newUser.id)
-        console.log('Session token created')
-
         const res = NextResponse.json({ success: true }, { status: 201 })
         res.cookies.set('session', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 60 * 60 * 24 * 30, // 30 days
+            maxAge: 60 * 60 * 24 * 30,
             sameSite: 'lax',
             path: '/',
         })
@@ -57,10 +67,6 @@ export async function POST(req: NextRequest) {
         console.error('Registration error detail:', {
             message: error.message,
             stack: error.stack,
-            code: error.code,
-            // Adding more details if available, e.g., request body (if not sensitive)
-            // or specific error type if it's a known error.
-            // For now, the existing stack and code already provide good detail.
         })
         return NextResponse.json({ error: `Internal server error: ${error.message}` }, { status: 500 })
     }

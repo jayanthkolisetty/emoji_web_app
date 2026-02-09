@@ -1,34 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSession } from '@/lib/auth'
+import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
-
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-async function supabaseInsertUser(payload: any) {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-        throw new Error('Supabase env vars not configured')
-    }
-
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/User`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            apikey: SUPABASE_SERVICE_ROLE_KEY,
-            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-            Prefer: 'return=representation',
-        },
-        body: JSON.stringify(payload),
-    })
-
-    const data = await res.json()
-    if (!res.ok) {
-        const msg = data?.message || JSON.stringify(data)
-        throw new Error(`Supabase insert failed: ${msg}`)
-    }
-
-    return data[0]
-}
 
 export async function POST(req: NextRequest) {
     try {
@@ -38,17 +11,28 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
         }
 
+        // Check if email already exists
+        const existingUser = await prisma.user.findUnique({
+            where: { email }
+        })
+
+        if (existingUser) {
+            return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
+        }
+
         // Hash password and prepare user record
         const passwordHash = await bcrypt.hash(password, 10)
         const friendCode = Math.random().toString(36).substring(2, 8).toUpperCase()
         const displayName = email.split('@')[0]
 
-        // Insert using Supabase REST (service role key)
-        const newUser = await supabaseInsertUser({
-            email,
-            passwordHash,
-            friendCode,
-            displayName,
+        // Create user with Prisma
+        const newUser = await prisma.user.create({
+            data: {
+                email,
+                passwordHash,
+                friendCode,
+                displayName,
+            },
         })
 
         // Create application session cookie (JWT)

@@ -1,33 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSession } from '@/lib/auth'
+import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
-
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-async function supabaseGetUserByEmail(email: string) {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-        throw new Error('Supabase env vars not configured')
-    }
-
-    const url = `${SUPABASE_URL}/rest/v1/User?email=eq.${encodeURIComponent(email)}`
-    const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-            apikey: SUPABASE_SERVICE_ROLE_KEY,
-            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-            Accept: 'application/json',
-        },
-    })
-
-    const data = await res.json()
-    if (!res.ok) {
-        const msg = data?.message || JSON.stringify(data)
-        throw new Error(`Supabase query failed: ${msg}`)
-    }
-
-    return data[0]
-}
 
 export async function POST(req: NextRequest) {
     try {
@@ -37,7 +11,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing email or password' }, { status: 400 })
         }
 
-        const user = await supabaseGetUserByEmail(email)
+        const user = await prisma.user.findUnique({
+            where: { email }
+        })
+
         if (!user) {
             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
         }
